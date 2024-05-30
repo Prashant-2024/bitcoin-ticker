@@ -2,6 +2,7 @@ import 'package:bitcoin_ticker/coin_data.dart';
 import 'package:bitcoin_ticker/info_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'dart:io' show Platform;
 
 class PriceScreen extends StatefulWidget {
   const PriceScreen({super.key});
@@ -13,8 +14,9 @@ class PriceScreen extends StatefulWidget {
 class _PriceScreenState extends State<PriceScreen> {
   // '?' because value is not being assigned to selectedcurrency because of string? type.
   String? selectedCurrency = "USD";
+  int cryptoValue = 0;
 
-  List<DropdownMenuItem<String>> getDropDownItems() {
+  DropdownButton<String> androidDropDown() {
     List<DropdownMenuItem<String>> dropDownItems = [];
     for (String currency in currenciesList) {
       var newItem = DropdownMenuItem(
@@ -23,20 +25,42 @@ class _PriceScreenState extends State<PriceScreen> {
       );
       dropDownItems.add(newItem);
     }
-    return dropDownItems;
+    return DropdownButton<String>(
+      menuMaxHeight: 350.0,
+      value: selectedCurrency,
+      items: dropDownItems,
+      onChanged: (value) => {
+        setState(() {
+          selectedCurrency = value;
+        })
+      },
+    );
   }
 
-  List<Text> getCupertinoChildren() {
+  CupertinoPicker iOSPicker() {
     List<Text> cupertinoChildrens = [];
     for (String currency in currenciesList) {
       var newChild = Text(currency);
       cupertinoChildrens.add(newChild);
     }
-    return cupertinoChildrens;
+    return CupertinoPicker(
+      itemExtent: 40.0,
+      onSelectedItemChanged: (selectedindex) {
+        print(selectedindex);
+      },
+      children: cupertinoChildrens,
+    );
+  }
+
+  void getCryptoValue() async {
+    var cryptoData = await CoinModel().getCoinRate('BTC');
+    cryptoValue = cryptoData['rate'].toInt();
+    // print(cryptoValue);
   }
 
   @override
   Widget build(BuildContext context) {
+    getCryptoValue();
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -48,9 +72,11 @@ class _PriceScreenState extends State<PriceScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              InfoCard(crypto: "BTC", currency: "USD"),
-              InfoCard(crypto: "ETH", currency: "USD"),
-              InfoCard(crypto: "ETH", currency: "USD"),
+              InfoCard(
+                crypto: "BTC",
+                currency: "USD",
+                value: cryptoValue,
+              )
             ],
           ),
           Container(
@@ -58,27 +84,10 @@ class _PriceScreenState extends State<PriceScreen> {
             color: Colors.lightBlue,
             alignment: Alignment.center,
             padding: EdgeInsets.only(bottom: 30.0),
-            child: CupertinoPicker(
-              itemExtent: 40.0,
-              onSelectedItemChanged: (selectedindex) {
-                print(selectedindex);
-              },
-              children: getCupertinoChildren(),
-            ),
+            child: Platform.isAndroid ? androidDropDown() : iOSPicker(),
           )
         ],
       ),
     );
   }
 }
-
-// DropdownButton<String>(
-// menuMaxHeight: 350.0,
-// value: selectedCurrency,
-// items: getDropDownItems(),
-// onChanged: (value) => {
-// setState(() {
-// selectedCurrency = value;
-// })
-// },
-// ),
