@@ -6,7 +6,7 @@ class InfoCard extends StatelessWidget {
 
   final String crypto;
   final String currency;
-  final double? value;
+  final int? value;
 
   @override
   Widget build(BuildContext context) {
